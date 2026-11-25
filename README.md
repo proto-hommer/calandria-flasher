@@ -6,7 +6,7 @@ nada. Es la forma más simple de tener tu nodo al día, estés donde estés.**
 Abrilo en **Chrome o Edge** en una computadora | *powered by Meshtastic®*
 
 [![Abrir el flasher](https://img.shields.io/badge/abrir-el%20flasher-2ea44f)](https://proto-hommer.github.io/calandria-flasher/)
-[![Último firmware](https://img.shields.io/github/v/release/proto-hommer/calandria-mk1-epaper?label=Calandria%20MK1%20epaper&color=c98245)](https://github.com/proto-hommer/calandria-mk1-epaper/releases/latest)
+[![Último firmware](https://img.shields.io/github/v/release/proto-hommer/calandria-mk1-epaper?label=Calandria%20MK1%20epaper&color=ff7a2f)](https://github.com/proto-hommer/calandria-mk1-epaper/releases/latest)
 
 <p align="center">
   <img src="docs/img/pagina.png" alt="La página del flasher: elegís el dispositivo, lo conectás y grabás" width="70%"/>
