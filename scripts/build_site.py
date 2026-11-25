@@ -20,6 +20,7 @@ import os
 import re
 import shutil
 import sys
+import urllib.error
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -59,11 +60,17 @@ def meshtastic_version(release, names):
 
 
 def latest_release(repo):
-    """El release publicado más nuevo (también los marcados como pre-release: el proyecto es alpha)."""
-    for r in get(f"{API}/repos/{repo}/releases?per_page=20"):
-        if not r.get("draft"):
-            return r
-    return None
+    """
+    El que GitHub marca como "Latest" (el mismo que usa CalandriApp). Si no hay ninguno (solo
+    pre-releases), el publicado más nuevo por fecha: la lista de /releases no viene ordenada por fecha.
+    """
+    try:
+        return get(f"{API}/repos/{repo}/releases/latest")
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            raise
+    rels = [r for r in get(f"{API}/repos/{repo}/releases?per_page=50") if not r.get("draft") and r.get("published_at")]
+    return max(rels, key=lambda r: r["published_at"]) if rels else None
 
 
 def build_device(dev):
