@@ -5,70 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Calandria · Flasher</title>
 <meta name="description" content="Grabá o actualizá el firmware de los dispositivos Calandria desde el navegador, por USB.">
-<link rel="icon" href="marca.svg" type="image/svg+xml">
+<link rel="icon" href="marca-2.svg" type="image/svg+xml">
 <script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
 <style>
+  /* Identidad 2.0 de la familia Calandria: noche, sin neón; blanco para leer y tocar,
+     naranja para lo que pide atención, cian solo para "vos". */
   :root {
-    --bg: #05090d; --surface: #0b1219; --surface-hi: #111b24; --line: #1c4255;
-    --cyan: #1ef4ff; --cyan-dim: #0b3d48; --text: #d8e6ee; --dim: #8ea4b3;
-    --copper: #ff9a3c; --good: #2bff88; --warn: #ffe135; --danger: #ff2e63;
+    --bg: #07090c; --surface: #0e1217; --surface-hi: #141920; --line: #1c232c; --control: #2a323c;
+    --text: #f1f3f5; --dim: #8a939d; --orange: #ff7a2f; --cyan: #5ce1e6;
     --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --cut: 14px;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--sans);
-    background-image: radial-gradient(circle at 20% -10%, #0b3d4855, transparent 55%),
-                      linear-gradient(var(--bg), var(--bg));
-    min-height: 100vh;
+    margin: 0; background-color: var(--bg); color: var(--text); font: 16px/1.5 var(--sans); min-height: 100vh;
+    background-image: linear-gradient(#10151b 1px, transparent 1px), linear-gradient(90deg, #10151b 1px, transparent 1px);
+    background-size: 40px 40px;
   }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
-  header img { width: 64px; height: auto; }
-  h1 { font: 600 1.6rem/1.1 var(--mono); letter-spacing: .06em; margin: 0; color: var(--cyan);
-       text-shadow: 0 0 10px #1ef4ff66; }
-  .sub { font: .8rem var(--mono); color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
-  .label { font: 600 .75rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
-  .panel {
-    position: relative; background: var(--surface); border: 1px solid var(--line); padding: 16px 18px;
-    margin-top: 16px;
-    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
-  }
-  .panel h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
-  .panel h2::before { content: ""; width: 3px; height: 12px; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 48px; }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  header img { width: 72px; height: auto; }
+  h1 { font: 400 1.7rem/1.1 var(--sans); letter-spacing: .28em; margin: 0; color: var(--text); }
+  .sub { font: .78rem var(--mono); color: var(--dim); letter-spacing: .18em; text-transform: uppercase; margin-top: 6px; }
+  .label { font: 500 .75rem var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-top: 16px; }
+  .panel h2 { margin: 0 0 12px; font: 600 1.05rem var(--sans); letter-spacing: 0; text-transform: none; color: var(--text); }
+  .panel h2 .label { margin-right: 8px; color: var(--orange); }
   p { margin: 6px 0; }
   .dim { color: var(--dim); }
-  a { color: var(--cyan); }
+  a { color: var(--text); }
+  a:hover { color: var(--cyan); }
   .devices { display: grid; gap: 10px; }
-  .device {
-    display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid var(--line);
-    background: var(--surface-hi); cursor: pointer;
-  }
-  .device:has(input:checked) { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset, 0 0 14px #1ef4ff33; }
-  .device input { accent-color: var(--cyan); margin-top: 5px; }
+  .device { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-hi); cursor: pointer; }
+  .device:has(input:checked) { border-color: var(--text); }
+  .device input { accent-color: var(--text); margin-top: 5px; width: 18px; height: 18px; }
   .device .name { font-weight: 600; }
-  .device .meta { font: .8rem var(--mono); color: var(--dim); margin-top: 2px; }
-  .ver { color: var(--good); }
+  .device .meta { font: .8rem var(--mono); color: var(--dim); margin-top: 4px; }
+  .ver { color: var(--text); font-weight: 600; }
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
   @media (max-width: 560px) { .actions { grid-template-columns: 1fr; } }
-  .btn {
-    width: 100%; padding: 14px 12px; font: 600 .95rem var(--mono); letter-spacing: .08em; cursor: pointer;
-    background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan);
-    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  }
-  .btn:hover { background: #0f5463; box-shadow: 0 0 16px #1ef4ff55; }
-  .btn.danger { background: #3a0c1a; color: #ff7a99; border-color: var(--danger); }
-  .btn.danger:hover { background: #511226; }
-  .btn small { display: block; font: 400 .75rem var(--sans); letter-spacing: 0; color: var(--text); margin-top: 4px; }
-  .note { font-size: .9rem; color: var(--dim); margin-top: 8px; }
-  .warn { border-left: 3px solid var(--warn); padding: 8px 12px; background: #2a2608; color: #fff3b0; margin-top: 12px; }
-  .bad { border-left: 3px solid var(--danger); padding: 8px 12px; background: #2a0a12; color: #ffc2d0; }
+  .btn { width: 100%; min-height: 56px; padding: 12px; font: 700 1rem var(--sans); cursor: pointer; border-radius: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--text); }
+  .btn:hover { background: #ffffff; }
+  .btn.danger { background: transparent; color: var(--orange); border-color: var(--orange); }
+  .btn.danger:hover { background: rgba(255,122,47,.08); }
+  .btn small { display: block; font: 400 .8rem var(--sans); color: inherit; opacity: .8; margin-top: 3px; }
+  .note { font-size: .92rem; color: var(--dim); margin-top: 10px; }
+  .warn { border: 1px solid var(--orange); border-radius: 12px; padding: 10px 14px; background: rgba(255,122,47,.06); color: #ffd2b8; margin-top: 14px; }
+  .bad { border: 1px solid var(--orange); border-radius: 12px; padding: 10px 14px; background: rgba(255,122,47,.06); color: #ffd2b8; }
   ol { padding-left: 22px; margin: 6px 0; }
-  li { margin: 4px 0; }
-  code, kbd { font-family: var(--mono); font-size: .9em; background: var(--surface-hi); border: 1px solid var(--line); padding: 0 4px; }
-  footer { margin-top: 28px; font-size: .8rem; color: var(--dim); }
+  li { margin: 5px 0; }
+  code, kbd { font-family: var(--mono); font-size: .88em; background: var(--surface-hi); border: 1px solid var(--control); border-radius: 6px; padding: 0 5px; }
+  footer { margin-top: 28px; font-size: .82rem; color: var(--dim); }
   footer p { margin: 4px 0; }
   [hidden] { display: none !important; }
 </style>
@@ -76,10 +64,10 @@
 <body>
 <main>
   <header>
-    <img src="marca.svg" alt="" width="64" height="54">
+    <img src="marca-2.svg" alt="" width="72" height="61">
     <div>
       <h1>CALANDRIA</h1>
-      <div class="sub">Flasher · grabá el firmware desde el navegador</div>
+      <div class="sub">Flasher · firmware por USB desde el navegador</div>
     </div>
   </header>
 
@@ -89,12 +77,12 @@
   </div>
 
   <section class="panel">
-    <h2 class="label">1 · Dispositivo</h2>
+    <h2><span class="label">1</span>Elegí el dispositivo</h2>
     <div id="devices" class="devices"><p class="dim">Cargando…</p></div>
   </section>
 
   <section class="panel">
-    <h2 class="label">2 · Conectalo</h2>
+    <h2><span class="label">2</span>Conectalo</h2>
     <ol>
       <li>Enchufalo a la computadora con un cable USB-C <b>de datos</b> (algunos cables solo cargan).</li>
       <li>Tocá uno de los botones de abajo y elegí el puerto que aparece.</li>
@@ -105,16 +93,16 @@
   </section>
 
   <section class="panel">
-    <h2 class="label">3 · Grabá</h2>
+    <h2><span class="label">3</span>Grabá</h2>
     <p id="selected" class="dim"></p>
     <div class="actions">
       <esp-web-install-button id="btn-update">
-        <button class="btn" slot="activate">ACTUALIZAR<small>Conserva el grupo, los canales y la configuración</small></button>
+        <button class="btn" slot="activate">Actualizar<small>Conserva el grupo, los canales y la configuración</small></button>
         <span slot="unsupported"></span>
         <span slot="not-allowed">La página tiene que abrirse por https.</span>
       </esp-web-install-button>
       <esp-web-install-button id="btn-install">
-        <button class="btn danger" slot="activate">INSTALACIÓN LIMPIA<small>Borra todo: para un nodo nuevo o trabado</small></button>
+        <button class="btn danger" slot="activate">Instalación limpia<small>Borra todo: para un nodo nuevo o trabado</small></button>
         <span slot="unsupported"></span>
         <span slot="not-allowed">La página tiene que abrirse por https.</span>
       </esp-web-install-button>
