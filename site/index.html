@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calandria · Flasher</title>
+<meta name="description" content="Grabá o actualizá el firmware de los dispositivos Calandria desde el navegador, por USB.">
+<link rel="icon" href="marca.svg" type="image/svg+xml">
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+<style>
+  :root {
+    --bg: #05090d; --surface: #0b1219; --surface-hi: #111b24; --line: #1c4255;
+    --cyan: #1ef4ff; --cyan-dim: #0b3d48; --text: #d8e6ee; --dim: #8ea4b3;
+    --copper: #ff9a3c; --good: #2bff88; --warn: #ffe135; --danger: #ff2e63;
+    --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --cut: 14px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--sans);
+    background-image: radial-gradient(circle at 20% -10%, #0b3d4855, transparent 55%),
+                      linear-gradient(var(--bg), var(--bg));
+    min-height: 100vh;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  header img { width: 64px; height: auto; }
+  h1 { font: 600 1.6rem/1.1 var(--mono); letter-spacing: .06em; margin: 0; color: var(--cyan);
+       text-shadow: 0 0 10px #1ef4ff66; }
+  .sub { font: .8rem var(--mono); color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
+  .label { font: 600 .75rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
+  .panel {
+    position: relative; background: var(--surface); border: 1px solid var(--line); padding: 16px 18px;
+    margin-top: 16px;
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  }
+  .panel h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .panel h2::before { content: ""; width: 3px; height: 12px; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  p { margin: 6px 0; }
+  .dim { color: var(--dim); }
+  a { color: var(--cyan); }
+  .devices { display: grid; gap: 10px; }
+  .device {
+    display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid var(--line);
+    background: var(--surface-hi); cursor: pointer;
+  }
+  .device:has(input:checked) { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset, 0 0 14px #1ef4ff33; }
+  .device input { accent-color: var(--cyan); margin-top: 5px; }
+  .device .name { font-weight: 600; }
+  .device .meta { font: .8rem var(--mono); color: var(--dim); margin-top: 2px; }
+  .ver { color: var(--good); }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  @media (max-width: 560px) { .actions { grid-template-columns: 1fr; } }
+  .btn {
+    width: 100%; padding: 14px 12px; font: 600 .95rem var(--mono); letter-spacing: .08em; cursor: pointer;
+    background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .btn:hover { background: #0f5463; box-shadow: 0 0 16px #1ef4ff55; }
+  .btn.danger { background: #3a0c1a; color: #ff7a99; border-color: var(--danger); }
+  .btn.danger:hover { background: #511226; }
+  .btn small { display: block; font: 400 .75rem var(--sans); letter-spacing: 0; color: var(--text); margin-top: 4px; }
+  .note { font-size: .9rem; color: var(--dim); margin-top: 8px; }
+  .warn { border-left: 3px solid var(--warn); padding: 8px 12px; background: #2a2608; color: #fff3b0; margin-top: 12px; }
+  .bad { border-left: 3px solid var(--danger); padding: 8px 12px; background: #2a0a12; color: #ffc2d0; }
+  ol { padding-left: 22px; margin: 6px 0; }
+  li { margin: 4px 0; }
+  code, kbd { font-family: var(--mono); font-size: .9em; background: var(--surface-hi); border: 1px solid var(--line); padding: 0 4px; }
+  footer { margin-top: 28px; font-size: .8rem; color: var(--dim); }
+  footer p { margin: 4px 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="marca.svg" alt="" width="64" height="54">
+    <div>
+      <h1>CALANDRIA</h1>
+      <div class="sub">Flasher · grabá el firmware desde el navegador</div>
+    </div>
+  </header>
+
+  <div id="no-serial" class="panel bad" hidden>
+    Este navegador no puede hablar con dispositivos USB (Web Serial). Abrí esta página en
+    <b>Chrome</b> o <b>Edge</b> en una computadora.
+  </div>
+
+  <section class="panel">
+    <h2 class="label">1 · Dispositivo</h2>
+    <div id="devices" class="devices"><p class="dim">Cargando…</p></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="label">2 · Conectalo</h2>
+    <ol>
+      <li>Enchufalo a la computadora con un cable USB-C <b>de datos</b> (algunos cables solo cargan).</li>
+      <li>Tocá uno de los botones de abajo y elegí el puerto que aparece.</li>
+      <li>Si no aparece ningún puerto, o falla al conectar: mantené apretado <kbd>BOOT</kbd>, enchufalo
+        (o apretá <kbd>RESET</kbd>) y soltá <kbd>BOOT</kbd>. Así entra en modo de grabación.</li>
+      <li>Cerrá CalandriApp o cualquier otro programa que esté usando el puerto.</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2 class="label">3 · Grabá</h2>
+    <p id="selected" class="dim"></p>
+    <div class="actions">
+      <esp-web-install-button id="btn-update">
+        <button class="btn" slot="activate">ACTUALIZAR<small>Conserva el grupo, los canales y la configuración</small></button>
+        <span slot="unsupported"></span>
+        <span slot="not-allowed">La página tiene que abrirse por https.</span>
+      </esp-web-install-button>
+      <esp-web-install-button id="btn-install">
+        <button class="btn danger" slot="activate">INSTALACIÓN LIMPIA<small>Borra todo: para un nodo nuevo o trabado</small></button>
+        <span slot="unsupported"></span>
+        <span slot="not-allowed">La página tiene que abrirse por https.</span>
+      </esp-web-install-button>
+    </div>
+    <div class="warn">
+      En <b>Actualizar</b>, el instalador pregunta <i>"Erase device"</i>: dejá la casilla <b>sin marcar</b>
+      y tocá <i>Next</i>. Si la marcás, se borra la configuración del nodo.
+    </div>
+    <p class="note">
+      Al terminar, el nodo se reinicia solo (si no, apretá <kbd>RESET</kbd> o desenchufalo y volvelo a
+      enchufar). Después de una instalación limpia el nodo queda de fábrica: conectalo a
+      <a href="https://github.com/proto-hommer/calandriapp/releases/latest">CalandriApp</a> y sumalo al
+      grupo con el QR.
+    </p>
+  </section>
+
+  <footer>
+    <p>Firmware y código: <a href="https://github.com/proto-hommer">github.com/proto-hommer</a>.
+      Este flasher es software libre (GPL-3.0) y usa
+      <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a> (Apache-2.0).</p>
+    <p>powered by Meshtastic®. Meshtastic® es una marca registrada de Meshtastic LLC. Calandria es un
+      proyecto independiente, no patrocinado ni respaldado por el proyecto Meshtastic. Sin garantía:
+      grabás bajo tu propio riesgo.</p>
+  </footer>
+</main>
+
+<script>
+  if (!("serial" in navigator)) document.getElementById("no-serial").hidden = false;
+
+  const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" }) : "";
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function select(d) {
+    document.getElementById("btn-update").manifest = d.update;
+    document.getElementById("btn-install").manifest = d.install;
+    document.getElementById("selected").innerHTML =
+      `Se va a grabar <b>${esc(d.name)} ${esc(d.version)}</b>` +
+      (d.meshtastic ? ` (Meshtastic ${esc(d.meshtastic)})` : "") +
+      ` · <a href="${esc(d.notes_url)}" target="_blank" rel="noopener">qué trae</a>`;
+    try { localStorage.setItem("device", d.id); } catch (e) {}
+  }
+
+  fetch("firmware/index.json", { cache: "no-cache" })
+    .then((r) => r.json())
+    .then((list) => {
+      const box = document.getElementById("devices");
+      box.innerHTML = "";
+      let saved = null;
+      try { saved = localStorage.getItem("device"); } catch (e) {}
+      const first = list.find((d) => d.id === saved) || list[0];
+      for (const d of list) {
+        const label = document.createElement("label");
+        label.className = "device";
+        label.innerHTML =
+          `<input type="radio" name="device" value="${esc(d.id)}"${d === first ? " checked" : ""}>` +
+          `<div><div class="name">${esc(d.name)}</div>` +
+          `<div class="dim">${esc(d.description)}</div>` +
+          `<div class="meta"><span class="ver">${esc(d.version)}</span>` +
+          (d.meshtastic ? ` · Meshtastic ${esc(d.meshtastic)}` : "") +
+          ` · ${esc(d.chip)} · ${esc(fmtDate(d.published))}` +
+          (d.docs ? ` · <a href="${esc(d.docs)}" target="_blank" rel="noopener">guía</a>` : "") +
+          `</div></div>`;
+        label.querySelector("input").addEventListener("change", () => select(d));
+        box.appendChild(label);
+      }
+      if (first) select(first);
+    })
+    .catch(() => {
+      document.getElementById("devices").innerHTML = '<p class="bad">No pude cargar la lista de firmwares. Probá recargar la página.</p>';
+    });
+</script>
+</body>
+</html>
