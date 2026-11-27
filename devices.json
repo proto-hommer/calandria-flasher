@@ -10,6 +10,6 @@
     "app_offset": 65536,
     "otadata_offset": 57344,
     "otadata_size": 8192,
-    "docs": "https://github.com/proto-hommer/calandria-mk1-epaper/blob/waveshare-epaper-154/variants/esp32s3/waveshare_epaper_154/README.es.md"
+    "docs": "https://github.com/proto-hommer/calandria-mk1-epaper/blob/calandria/variants/esp32s3/calandria_mk1_epaper/README.es.md"
   }
 ]
